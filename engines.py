@@ -9,9 +9,9 @@ from matplotlib import pyplot as plt
 #variables are initialized to positive small numbers to break symmetry
 
 
-def weight_variable(shape):
+def weight_variable(shape,std=0.1):
 
-  initial = tf.truncated_normal(shape, stddev=0.1)
+  initial = tf.truncated_normal(shape, stddev=std)
   return tf.Variable(initial)
 
 def bias_variable(shape):
@@ -271,7 +271,12 @@ def MLP_2hidden(Train,learning_rate=0.5, steps=500, batch_size=2**7,N1=100, N2=1
 #	COVNET
 #
 ###################################################################
-def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05):
+def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,drop_prob=0.5):
+	''' Engine runing a convultional network on dataset Train. Uses Stochastic Gradient Descent 
+	Optimizer to minimize the mean squared error. Architecture:3x3 max_pooling covolutional hidden 
+	layer and a fully connected hidden layer. Activation functions:ReLU. Output layer:softmax units.
+	 Tikhonov regularization and dropout in the fully connected layer.
+	'''
 
 	#---------------------------------------------
 	#	DEFINING THE VARIABLES
@@ -289,7 +294,7 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	#---------------------------------------------
 	#	CONVOLUTIONAL LAYER
 	#---------------------------------------------
-	W_conv1 = weight_variable([5, 5, 1, N1])
+	W_conv1 = weight_variable([5, 5, 1, N1],0.05)
 	b_conv1 = bias_variable([N1])
 
 	h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
@@ -299,7 +304,7 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	#	FULLY CONECTED LAYER
 	#--------------------------------------------
 
-	W_fc1 = weight_variable([23 * 23 * N1, N2])
+	W_fc1 = weight_variable([23 * 23 * N1, N2],0.05)
 	b_fc1 = bias_variable([N2])
 
 	h_pool1_flat = tf.reshape(h_pool1, [-1, 23 * 23 * N1])
@@ -318,7 +323,7 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	#--------------------------------------------
 		
 
-	W_fc2 = weight_variable([N2, Train.num_classes])
+	W_fc2 = weight_variable([N2, Train.num_classes],0.05)
 	b_fc2 = bias_variable([Train.num_classes])
 
 	y= tf.nn.softmax(tf.matmul(h_pool2_flat, W_fc2) + b_fc2)
@@ -330,7 +335,7 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 
 	RMSE = tf.reduce_mean((y_-y)**2)
 	loss_function=RMSE+L*(tf.reduce_mean(W_fc1**2)+tf.reduce_mean(W_fc2**2)+tf.reduce_mean(W_conv1**2))
-	train_step=tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_function)
+	train_step=tf.train.AdagradOptimizer(learning_rate).minimize(loss_function)
 
 	#---------------------------------------------------
 	#       INITIALIZE VARIABLES and 
@@ -345,15 +350,15 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	#	TRAINING
 	#--------------------------------------------------
 
-	#lista=[]	
+	lista=[]	
 	
 	for i in range(steps):
 	   x_batch,y_batch=Train.next_batch(batch_size)
-	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch,keep_prob: 0.5})
-	   #lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch, keep_prob: 1}))
+	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch,keep_prob: drop_prob})
+	   lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch, keep_prob: 1}))
 
-	#plt.plot(lista)
-	#plt.show()
+	plt.plot(lista)
+	plt.show()
 
 	return sess.run(RMSE,feed_dict={x:x_batch, y_: y_batch, keep_prob: 1})
 
