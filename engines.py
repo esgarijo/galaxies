@@ -267,7 +267,7 @@ def es_covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 		x_batch,y_batch,epoch=ds.train.next_batch(batch_size,True)
 	   	sess.run(train_step,feed_dict={x:x_batch, y_: y_batch,keep_prob: drop_prob})
 		if epoch != None:
-	      	   error=sess.run(RMSE,feed_dict={x:ds.train.features, y_:ds.train.features, keep_prob: 1})
+	      	   error=sess.run(RMSE,feed_dict={x:ds.train.features, y_:ds.train.labels, keep_prob: 1})
 	      	   print 'Epoch: ', epoch, '  Loss: ', error
 
 	   i+=steps
