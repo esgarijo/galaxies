@@ -8,11 +8,6 @@ class DataSet(object):
    def __init__(self):
 	'''Data set object to manage Galaxy Data and batch approach'''
 
-	#Load Galaxies IDs
-	self._list=list(np.genfromtxt('GalaxyID.txt',dtype=int))
-
-	
-
 	#Load dataframe with labels
 	ds=pd.read_csv('labels.csv',index_col=0)
 	ds=ds.loc[:,['Class1.1', 'Class1.2', 'Class1.3']]
