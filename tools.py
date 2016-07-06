@@ -94,6 +94,10 @@ class TrainSet(DataSet):
 	else:
 	   return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end])
 
+   def reset(self):
+	self._epochs_completed = 0
+    	self._index_in_epoch = 0
+
 
 ################################################################
 

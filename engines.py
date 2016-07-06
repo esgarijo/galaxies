@@ -259,6 +259,7 @@ def es_covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	i=0
 	j=0
 	v=10 #(RMSE can't be higher than 1, this value is infty)
+	ds.train.reset()
 
 
 	while j<p:#if we still have patience
@@ -276,9 +277,10 @@ def es_covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	   if v_<v:#if the validation error decreases
 		j=0
 		v=v_
+		e=sess.run(RMSE,feed_dict={x:ds.train.features, y_:ds.train.labels, keep_prob: 1})
 		i_=i
 
 	   else: #if the validation error increases
 		j+=1
-	return v
+	return v,e
 
