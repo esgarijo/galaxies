@@ -57,19 +57,27 @@ class DataSet(object):
    def num_pixels(self):
 	return self._num_pixels
 
+
+#-----------------------------------------------------------
+
+
+class TrainSet(DataSet):
+   pass
+
    @property
    def epochs_completed(self):
 	return self._epochs_completed
 
-#-----------------------------------------------------------
-   def next_batch(self, batch_size):
+   def next_batch(self, batch_size,report=False):
 	"""Return the next `batch_size` examples from this data set.
 	with 'prev'=#minimum fraud examples/batch_size"""
+	epoch=None
 	start = self._index_in_epoch
 	self._index_in_epoch += batch_size
 	if self._index_in_epoch > self._num_examples:
 	   # Finished epoch
      	   self._epochs_completed += 1
+	   epoch=self._epochs_completed
 	   # Shuffle the data
 	   perm = np.arange(self._num_examples)
       	   np.random.shuffle(perm)
@@ -81,10 +89,14 @@ class DataSet(object):
 	   assert batch_size <= self._num_examples
 	end = self._index_in_epoch
 	
-	return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end])
+	if report:
+	   return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end]),epoch
+	else:
+	   return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end])
 
 
 ################################################################
+
 
 
 class GalaxyZoo(object):
@@ -116,7 +128,7 @@ class GalaxyZoo(object):
 	train=ds.drop(val.index,axis=0)
 
 	#create train set:
-	self._train=DataSet(train)
+	self._train=TrainSet(train)
 
 
    @property
