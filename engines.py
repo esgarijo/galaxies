@@ -33,237 +33,6 @@ def max_pool_3x3(x):
 
 
 
-####################################################
-#
-#	THE PERCEPTRON CLASSIFIER
-#
-####################################################
-
-
-def perceptron(Train,learning_rate=0.5, steps=500, batch_size=2**7):
-	
-	#---------------------------------------------
-	#	DEFINING THE VARIABLES
-	#---------------------------------------------
-
-	#Features
-	x=tf.placeholder(tf.float32,[None,Train.num_pixels, Train.num_pixels])
-	#Labels
-	y_=tf.placeholder(tf.float32,[None,Train.num_classes])
-
-
-	#Weights
-	W = weight_variable([Train.num_pixels**2,Train.num_classes])
-	#Biases
-	b = bias_variable([Train.num_classes])
-
-	#-------------------------------------------
-	#	BUILDING THE MODEL
-	#-------------------------------------------
-	
-	#Reshape the input
-	z = tf.reshape(x,shape = [-1,Train.num_pixels**2])
-
-	#Obtain  output
-	y = tf.nn.softmax(tf.matmul(z,W)  +b)
-
-	#--------------------------------------------------
-	#	LOSS FUNCTION
-	#--------------------------------------------------
-
-	RMSE = tf.reduce_mean((y_-y)**2)
-	loss_function=RMSE+0.8*tf.reduce_mean(W**2)
-	train_step=tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
-
-	#---------------------------------------------------
-	#       INITIALIZE VARIABLES and 
-	#       LAUNCH SESSION
-	#---------------------------------------------------
-	init=tf.initialize_all_variables()
-
-	sess=tf.Session()
-	sess.run(init)
-
-	#--------------------------------------------------
-	#	TRAINING
-	#--------------------------------------------------
-
-	lista=[]	
-	
-	for i in range(steps):
-	   x_batch,y_batch=Train.next_batch(batch_size)
-	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch})
-	   lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch}))
-
-	plt.plot(lista)
-	plt.show()
-
-	return sess.run(RMSE,feed_dict={x:x_batch, y_: y_batch})
-
-
-
-#################################################################
-#
-#	MULTILAYER PERCEPTRON
-#	1 HIDDEN LAYER
-#
-#################################################################
-
-
-
-def MLP_1hidden(Train,learning_rate=0.5, steps=500, batch_size=2**7,N1=100):
-
-	#---------------------------------------------
-	#	DEFINING THE VARIABLES
-	#---------------------------------------------
-
-	#Features
-	x=tf.placeholder(tf.float32,[None,Train.num_pixels, Train.num_pixels])
-	#Labels
-	y_=tf.placeholder(tf.float32,[None,Train.num_classes])
-
-	#Reshape the input
-	z = tf.reshape(x,shape = [-1,Train.num_pixels**2])
-
-	#---------------------------------------------
-	#	HIDDEN LAYER
-	#---------------------------------------------
-	
-	W1 = weight_variable([Train.num_pixels**2,N1])
-	b1 = bias_variable([N1])
-
-	#output
-	h1 = tf.nn.relu(tf.matmul(z, W1) + b1)
-
-	#--------------------------------------------
-	#	OUTPUT LAYER
-	#--------------------------------------------
-
-	W2 = weight_variable([N1,Train.num_classes])
-	b2 = bias_variable([Train.num_classes])
-
-	#Obtain  output
-	y = tf.nn.softmax(tf.matmul(h1,W2)  +b2)
-
-	#--------------------------------------------------
-	#	LOSS FUNCTION
-	#--------------------------------------------------
-
-	RMSE = tf.reduce_mean((y_-y)**2)
-	loss_function=RMSE#+0.04*tf.reduce_mean(W1**2)+0.03*tf.reduce_mean(W2**2)
-	train_step=tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
-
-	#---------------------------------------------------
-	#       INITIALIZE VARIABLES and 
-	#       LAUNCH SESSION
-	#---------------------------------------------------
-	init=tf.initialize_all_variables()
-
-	sess=tf.Session()
-	sess.run(init)
-
-	#--------------------------------------------------
-	#	TRAINING
-	#--------------------------------------------------
-
-	lista=[]	
-	
-	for i in range(steps):
-	   x_batch,y_batch=Train.next_batch(batch_size)
-	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch})
-	   lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch}))
-
-	plt.plot(lista)
-	plt.show()
-
-	return sess.run(RMSE,feed_dict={x:x_batch, y_: y_batch})
-
-
-
-#################################################################
-#
-#	MULTILAYER PERCEPTRON
-#	2 HIDDEN LAYER
-#
-#################################################################
-def MLP_2hidden(Train,learning_rate=0.5, steps=500, batch_size=2**7,N1=100, N2=10):
-
-	#---------------------------------------------
-	#	DEFINING THE VARIABLES
-	#---------------------------------------------
-
-	#Features
-	x=tf.placeholder(tf.float32,[None,Train.num_pixels, Train.num_pixels])
-	#Labels
-	y_=tf.placeholder(tf.float32,[None,Train.num_classes])
-
-	#Reshape the input
-	z = tf.reshape(x,shape = [-1,Train.num_pixels**2])
-
-	#---------------------------------------------
-	#	HIDDEN LAYER 1
-	#---------------------------------------------
-	
-	W1 = weight_variable([Train.num_pixels**2,N1])
-	b1 = bias_variable([N1])
-
-	#output
-	h1 = tf.nn.relu(tf.matmul(z, W1) + b1)
-
-	#---------------------------------------------
-	#	HIDDEN LAYER 2
-	#---------------------------------------------
-	
-	W2 = weight_variable([N1,N2])
-	b2 = bias_variable([N2])
-
-	#output
-	h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
-
-	#--------------------------------------------
-	#	OUTPUT LAYER
-	#--------------------------------------------
-
-	W3 = weight_variable([N2,Train.num_classes])
-	b3 = bias_variable([Train.num_classes])
-
-	#Obtain  output
-	y = tf.nn.softmax(tf.matmul(h2,W3)  +b3)
-
-	#--------------------------------------------------
-	#	LOSS FUNCTION
-	#--------------------------------------------------
-
-	RMSE = tf.reduce_mean((y_-y)**2)
-	loss_function=RMSE#+0.04*tf.reduce_mean(W1**2)+0.03*tf.reduce_mean(W2**2)
-	train_step=tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
-
-	#---------------------------------------------------
-	#       INITIALIZE VARIABLES and 
-	#       LAUNCH SESSION
-	#---------------------------------------------------
-	init=tf.initialize_all_variables()
-
-	sess=tf.Session()
-	sess.run(init)
-
-	#--------------------------------------------------
-	#	TRAINING
-	#--------------------------------------------------
-
-	lista=[]	
-	
-	for i in range(steps):
-	   x_batch,y_batch=Train.next_batch(batch_size)
-	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch})
-	   lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch}))
-
-	plt.plot(lista)
-	plt.show()
-
-	return sess.run(RMSE,feed_dict={x:x_batch, y_: y_batch})
-
-
 
 
 ####################################################################
@@ -271,11 +40,29 @@ def MLP_2hidden(Train,learning_rate=0.5, steps=500, batch_size=2**7,N1=100, N2=1
 #	COVNET
 #
 ###################################################################
-def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,drop_prob=0.5):
+def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,drop_prob=0.5,momentum=0.1):
 	''' Engine runing a convultional network on dataset Train. Uses Stochastic Gradient Descent 
-	Optimizer to minimize the mean squared error. Architecture:3x3 max_pooling covolutional hidden 
+	Optimizer with momentum to minimize the mean squared error. Architecture:3x3 max_pooling covolutional hidden 
 	layer and a fully connected hidden layer. Activation functions:ReLU. Output layer:softmax units.
 	 Tikhonov regularization and dropout in the fully connected layer.
+	PARAMETERS:
+	------------------------------
+	Train : the data set (Loadad using DataSet object from tools.py) to be analyzed.
+	learning_rate : learning rate of the SGD algorithm
+	steps : number of actualizations
+	batch_size : number of examples over which the net is trained each time
+	N1 : width of the convolutional layer
+	N2 : width of the hidden fully connected layer
+	L : weight of the Tikhonov (L2) regularization
+	drop_prob : (Misleading name) probability to keep the output of a neuron of the fully connected layer
+	momentum: Parameter of the TensorFlow implementation, I guess it is the "mass". 
+
+
+	EXAMPLE:
+	from tools import DataSet
+	ds=DataSet()
+
+	covnet(ds, learning_rate=0.005,N1=10,N2=50, drop_prob=0.15,L=0.003)
 	'''
 
 	#---------------------------------------------
@@ -335,7 +122,7 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 
 	RMSE = tf.reduce_mean((y_-y)**2)
 	loss_function=RMSE+L*(tf.reduce_mean(W_fc1**2)+tf.reduce_mean(W_fc2**2)+tf.reduce_mean(W_conv1**2))
-	train_step=tf.train.AdagradOptimizer(learning_rate).minimize(loss_function)
+	train_step=tf.train.MomentumOptimizer(learning_rate,momentum).minimize(loss_function)
 
 	#---------------------------------------------------
 	#       INITIALIZE VARIABLES and 
@@ -350,15 +137,14 @@ def covnet(Train,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	#	TRAINING
 	#--------------------------------------------------
 
-	lista=[]	
-	
+	epoch=0
 	for i in range(steps):
 	   x_batch,y_batch=Train.next_batch(batch_size)
 	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch,keep_prob: drop_prob})
-	   lista.append(sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch, keep_prob: 1}))
-
-	plt.plot(lista)
-	plt.show()
+	   if (i*batch_size % Train.num_examples)<batch_size-1:
+	      error=sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch, keep_prob: 1})
+	      print 'Epoch: ', epoch, '  Loss: ', error
+	      epoch+=1
 
 	return sess.run(RMSE,feed_dict={x:x_batch, y_: y_batch, keep_prob: 1})
 
