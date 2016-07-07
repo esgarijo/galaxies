@@ -1,31 +1,24 @@
 import pandas as pd
 import numpy as np
-import tensorflow as tf
 from random import shuffle
 
+class TemplateSet(object):
+   '''General class from which every set inherits its properties
+   labels : pandas dataframe containing the labels assigned to this set'''
+   def __init__(self,labels):
+	'''Structured way to store data to be processed
+	labels : pandas dataframe containing the labels assigned to this set'''
 
-class DataSet(object):
-   def __init__(self):
-	'''Data set object to manage Galaxy Data and batch approach'''
+	self._labels=np.asarray(labels)
 
-	#Load dataframe with labels
-	ds=pd.read_csv('labels.csv',index_col=0)
-	ds=ds.loc[:,['Class1.1', 'Class1.2', 'Class1.3']]
+	#create a list of identifiers
+	self._list=labels.index
 
-	#self._labels=pd.concat([self._labels[self._labels['Class1.1']>0.9],self._labels[ self._labels['Class1.1']<0.1]])
-	self._labels=pd.concat([ds[ds['Class1.1']>0.95],ds[ds['Class1.1']<0.05]])
-	#self._labels=ds
-
-
-	self._list=self._labels.index
 	self._num_examples=len(self._list)
-
-	self._num_classes=self._labels.columns.shape[0]
-	self._labels=np.asarray(self._labels)
-
-	#read the numer of pixels
-	img=pd.read_csv('features/'+str(self._list[0])+'.csv',header=None)
+	self._num_classes=labels.columns.shape[0]
 	
+	#read the number of pixels
+	img=pd.read_csv('features/'+str(self._list[0])+'.csv',header=None)
 	self._num_pixels=img.shape[0]
 
 	#load images
@@ -35,11 +28,10 @@ class DataSet(object):
 	   self._features.append(img)
 
 	self._features=np.asarray(self._features)
-    	self._epochs_completed = 0
+	self._epochs_completed = 0
     	self._index_in_epoch = 0
-
-
-   #-------------------------------------------------------------
+	
+	#-------------------------------------------------------------
 
    @property
    def list(self):
@@ -65,20 +57,27 @@ class DataSet(object):
    def num_pixels(self):
 	return self._num_pixels
 
+
+#-----------------------------------------------------------
+
+
+class TrainSet(TemplateSet):
+   pass
+
    @property
    def epochs_completed(self):
 	return self._epochs_completed
 
-
-#-----------------------------------------------------------
-   def next_batch(self, batch_size):
+   def next_batch(self, batch_size,report=False):
 	"""Return the next `batch_size` examples from this data set.
 	with 'prev'=#minimum fraud examples/batch_size"""
+	epoch=None
 	start = self._index_in_epoch
 	self._index_in_epoch += batch_size
 	if self._index_in_epoch > self._num_examples:
 	   # Finished epoch
      	   self._epochs_completed += 1
+	   epoch=self._epochs_completed
 	   # Shuffle the data
 	   perm = np.arange(self._num_examples)
       	   np.random.shuffle(perm)
@@ -90,5 +89,62 @@ class DataSet(object):
 	   assert batch_size <= self._num_examples
 	end = self._index_in_epoch
 	
-	return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end])
+	if report:
+	   return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end]),epoch
+	else:
+	   return np.asarray(self._features[start:end]), np.asarray(self._labels[start:end])
 
+   def reset(self):
+	self._epochs_completed = 0
+    	self._index_in_epoch = 0
+
+
+################################################################
+
+
+
+class DataSet(object):
+   def __init__(self, test_size=0.1):
+	'''Data set object to manage Galaxy Data and batch approach
+	PARAMTETERS:
+	-------------------------------------------------------
+	test_size : fraction of data to be used in the test set
+	val_size is the same than test
+	'''
+	#Load dataframe with labels
+	ds=pd.read_csv('labels.csv',index_col=0)
+	ds=ds.loc[:,['Class1.1', 'Class1.2', 'Class1.3']]
+
+	ds=pd.concat([ds[ds['Class1.1']>0.95],ds[ds['Class1.1']<0.05]])
+
+	#sample a test set
+	test=ds.sample(frac=test_size)
+	self._test=TemplateSet(test)
+
+	#drop test  set:
+	ds=ds.drop(test.index,axis=0)
+
+	#sample a validation set
+	val=ds.sample(n=self._test.num_examples)
+	self._val=TemplateSet(val)
+
+	#drop val to get train:
+	train=ds.drop(val.index,axis=0)
+
+	#create train set:
+	self._train=TrainSet(train)
+
+
+   @property
+   def test(self):
+	return self._test
+
+   @property
+   def val(self):
+	return self._val
+
+   @property
+   def train(self):
+	return self._train
+
+	
