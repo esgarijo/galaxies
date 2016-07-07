@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from random import shuffle
 
-class DataSet(object):
+class TemplateSet(object):
    '''General class from which every set inherits its properties
    labels : pandas dataframe containing the labels assigned to this set'''
    def __init__(self,labels):
@@ -61,7 +61,7 @@ class DataSet(object):
 #-----------------------------------------------------------
 
 
-class TrainSet(DataSet):
+class TrainSet(TemplateSet):
    pass
 
    @property
@@ -103,7 +103,7 @@ class TrainSet(DataSet):
 
 
 
-class GalaxyZoo(object):
+class DataSet(object):
    def __init__(self, test_size=0.1):
 	'''Data set object to manage Galaxy Data and batch approach
 	PARAMTETERS:
@@ -119,14 +119,14 @@ class GalaxyZoo(object):
 
 	#sample a test set
 	test=ds.sample(frac=test_size)
-	self._test=DataSet(test)
+	self._test=TemplateSet(test)
 
 	#drop test  set:
 	ds=ds.drop(test.index,axis=0)
 
 	#sample a validation set
 	val=ds.sample(n=self._test.num_examples)
-	self._val=DataSet(val)
+	self._val=TemplateSet(val)
 
 	#drop val to get train:
 	train=ds.drop(val.index,axis=0)

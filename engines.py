@@ -56,7 +56,7 @@ def covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,d
 
 	EXAMPLE:
 	from tools import DataSet
-	ds=GalaxyZoo()
+	ds=DataSet()
 
 	covnet(ds, learning_rate=0.005,N1=10,N2=50, drop_prob=0.15,L=0.003)
 	'''
@@ -66,13 +66,13 @@ def covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,d
 	#---------------------------------------------
 
 	#Features
-	x=tf.placeholder(tf.float32,[None,ds.train,num_pixels, ds.train,num_pixels])
+	x=tf.placeholder(tf.float32,[None,ds.train.num_pixels, ds.train.num_pixels])
 	#Labels
-	y_=tf.placeholder(tf.float32,[None,ds.train,num_classes])
+	y_=tf.placeholder(tf.float32,[None,ds.train.num_classes])
 
 
 	# Reshape input picture
-    	x_image = tf.reshape(x, shape=[-1, ds.train,num_pixels, ds.train,num_pixels, 1])
+    	x_image = tf.reshape(x, shape=[-1, ds.train.num_pixels, ds.train.num_pixels, 1])
 
 	#---------------------------------------------
 	#	CONVOLUTIONAL LAYER
@@ -106,8 +106,8 @@ def covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,d
 	#--------------------------------------------
 		
 
-	W_fc2 = weight_variable([N2, ds.train,num_classes],0.05)
-	b_fc2 = bias_variable([ds.train,num_classes])
+	W_fc2 = weight_variable([N2, ds.train.num_classes],0.05)
+	b_fc2 = bias_variable([ds.train.num_classes])
 
 	y= tf.nn.softmax(tf.matmul(h_pool2_flat, W_fc2) + b_fc2)
 
@@ -135,9 +135,9 @@ def covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.05,d
 
 	epoch=0
 	for i in range(steps):
-	   x_batch,y_batch=ds.train,next_batch(batch_size)
+	   x_batch,y_batch=ds.train.next_batch(batch_size)
 	   sess.run(train_step,feed_dict={x:x_batch, y_: y_batch,keep_prob: drop_prob})
-	   if (i*batch_size % ds.train,num_examples)<batch_size-1:
+	   if (i*batch_size % ds.train.num_examples)<batch_size-1:
 	      error=sess.run(RMSE,feed_dict={x:x_batch, y_:y_batch, keep_prob: 1})
 	      print 'Epoch: ', epoch, '  Loss: ', error
 	      epoch+=1
@@ -176,11 +176,21 @@ def es_covnet(ds,learning_rate=0.1, steps=500, batch_size=2**7,N1=32,N2=32,L=0.0
 	p : patience: number of times we observe worsening  in val set before giving up
 
 
-	EXAMPLE:
-	from tools import DataSet
-	ds=GalaxyZoo()
+	RETURNS:
+	-------------------------------
+	The average of the loss function over validation set and over train set in 
+	the optimal step
 
-	covnet(ds, learning_rate=0.005,N1=10,N2=50, drop_prob=0.15,L=0.003)
+	v,e=es_covnet(ds)
+
+
+
+	EXAMPLE:
+	-------------------------------
+	from tools import DataSet
+	ds=DataSet()
+
+	v,e=es_covnet(ds, learning_rate=0.005,N1=10,N2=50, drop_prob=0.15,L=0.003)
 	'''
 
 	#---------------------------------------------
